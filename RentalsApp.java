@@ -12,32 +12,41 @@ public class RentalsApp extends Application {
     @Override
     public void start(Stage stage) {
 
+        // step 1: create labels to describe each field
         Text textCustomer = new Text("Customer:");
         Text textGenre = new Text("Genre:");
         Text textMovies = new Text("Movies:");
         Text textBorrowed = new Text("Borrowed:");
         Text textReturned = new Text("Returned:");
 
+        // step 2: create combo boxes (dropdown lists) for selecting options
         ComboBox<String> comboBoxCustomer = new ComboBox<>();
         ComboBox<String> comboBoxGenre = new ComboBox<>();
         ComboBox<String> comboBoxMovies = new ComboBox<>();
         ComboBox<String> comboBoxBorrowed = new ComboBox<>();
         ComboBox<String> comboBoxReturned = new ComboBox<>();
 
+        // step 3: create buttons to trigger actions like saving or returning a movie
         Button buttonSaveRental = new Button("Save Rental");
         Button buttonReturnMovie = new Button("Return Movie");
 
+        // step 4: create a GridPane to arrange elements neatly in rows and columns
         GridPane gridPane = new GridPane();
 
+        // step 5: set the overall size of the layout
         gridPane.setMinSize(600, 600);
 
+        // step 6: add spacing around the grid's edges
         gridPane.setPadding(new Insets(30, 40, 30, 40));
 
+        // step 7: add spacing between rows (Vgap) and columns (Hgap)
         gridPane.setVgap(15);
         gridPane.setHgap(20);
 
+        // step 8: center the layout within the window
         gridPane.setAlignment(Pos.CENTER);
 
+        // step 9: place each label and dropdown/button in a specific column and row
         gridPane.add(textCustomer, 0, 0);
         gridPane.add(comboBoxCustomer, 1, 0);
 
@@ -57,19 +66,18 @@ public class RentalsApp extends Application {
         gridPane.add(textReturned, 0, 6);
         gridPane.add(comboBoxReturned, 1, 6);
 
-        String buttonStyle = "-fx-background-color: #1a6bbf; -fx-text-fill: white; -fx-font-size: 14pt; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 6;";
-        buttonSaveRental.setStyle(buttonStyle);
-        buttonReturnMovie.setStyle(buttonStyle);
+        // step 10: apply colors and fonts to buttons and labels
+        buttonSaveRental.setStyle("-fx-background-color: darkslateblue; -fx-text-fill: white; -fx-font-size:13pt;");
+        buttonReturnMovie.setStyle("-fx-background-color: darkslateblue; -fx-text-fill: white; -fx-font-size:13pt;");
 
-        String labelStyle = "-fx-font: normal bold 18px 'Serif';";
-        textCustomer.setStyle(labelStyle);
-        textGenre.setStyle(labelStyle);
-        textMovies.setStyle(labelStyle);
-        textBorrowed.setStyle(labelStyle);
-        textReturned.setStyle(labelStyle);
+        textCustomer.setStyle("-fx-font: normal bold 20px 'serif' ");
+        textGenre.setStyle("-fx-font: normal bold 20px 'serif' ");
+        textMovies.setStyle("-fx-font: normal bold 20px 'serif' ");
+        textBorrowed.setStyle("-fx-font: normal bold 20px 'serif' ");
+        textReturned.setStyle("-fx-font: normal bold 20px 'serif' ");
+        gridPane.setStyle("-fx-background-color: BEIGE;");
 
-        gridPane.setStyle("-fx-background-color: #f0f4f8; -fx-border-color: #1a6bbf; -fx-border-width: 2; -fx-border-radius: 8;");
-
+        // step 11: make all interactive elements the same width for a clean look
         comboBoxCustomer.setPrefWidth(200);
         comboBoxGenre.setPrefWidth(200);
         comboBoxMovies.setPrefWidth(200);
@@ -78,8 +86,10 @@ public class RentalsApp extends Application {
         buttonSaveRental.setPrefWidth(200);
         buttonReturnMovie.setPrefWidth(200);
 
+        // step 12: create the main scene containing the layout
         Scene scene = new Scene(gridPane);
 
+        // step 13: configure the application window (stage) and make it visible
         stage.setTitle("Movie Library System - Rentals");
         stage.setScene(scene);
         stage.show();

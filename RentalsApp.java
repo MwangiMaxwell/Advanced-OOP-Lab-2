@@ -6,70 +6,49 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import java.sql.*;
 
 public class RentalsApp extends Application {
 
     @Override
     public void start(Stage stage) {
 
-        // step 1: create labels to describe each field
         Text textCustomer = new Text("Customer:");
         Text textGenre = new Text("Genre:");
         Text textMovies = new Text("Movies:");
         Text textBorrowed = new Text("Borrowed:");
         Text textReturned = new Text("Returned:");
 
-        // step 2: create combo boxes (dropdown lists) for selecting options
         ComboBox<String> comboBoxCustomer = new ComboBox<>();
         ComboBox<String> comboBoxGenre = new ComboBox<>();
         ComboBox<String> comboBoxMovies = new ComboBox<>();
         ComboBox<String> comboBoxBorrowed = new ComboBox<>();
         ComboBox<String> comboBoxReturned = new ComboBox<>();
-
-        // step 3: create buttons to trigger actions like saving or returning a movie
         Button buttonSaveRental = new Button("Save Rental");
         Button buttonReturnMovie = new Button("Return Movie");
 
-        // step 4: create a GridPane to arrange elements neatly in rows and columns
         GridPane gridPane = new GridPane();
-
-        // step 5: set the overall size of the layout
         gridPane.setMinSize(600, 600);
-
-        // step 6: add spacing around the grid's edges
         gridPane.setPadding(new Insets(30, 40, 30, 40));
-
-        // step 7: add spacing between rows (Vgap) and columns (Hgap)
         gridPane.setVgap(15);
         gridPane.setHgap(20);
-
-        // step 8: center the layout within the window
         gridPane.setAlignment(Pos.CENTER);
 
-        // step 9: place each label and dropdown/button in a specific column and row
         gridPane.add(textCustomer, 0, 0);
         gridPane.add(comboBoxCustomer, 1, 0);
-
         gridPane.add(textGenre, 0, 1);
         gridPane.add(comboBoxGenre, 1, 1);
-
         gridPane.add(textMovies, 0, 2);
         gridPane.add(comboBoxMovies, 1, 2);
-
         gridPane.add(buttonSaveRental, 1, 3);
-
         gridPane.add(textBorrowed, 0, 4);
         gridPane.add(comboBoxBorrowed, 1, 4);
-
         gridPane.add(buttonReturnMovie, 1, 5);
-
         gridPane.add(textReturned, 0, 6);
         gridPane.add(comboBoxReturned, 1, 6);
 
-        // step 10: apply colors and fonts to buttons and labels
         buttonSaveRental.setStyle("-fx-background-color: darkslateblue; -fx-text-fill: white; -fx-font-size:13pt;");
         buttonReturnMovie.setStyle("-fx-background-color: darkslateblue; -fx-text-fill: white; -fx-font-size:13pt;");
-
         textCustomer.setStyle("-fx-font: normal bold 20px 'serif' ");
         textGenre.setStyle("-fx-font: normal bold 20px 'serif' ");
         textMovies.setStyle("-fx-font: normal bold 20px 'serif' ");
@@ -77,7 +56,6 @@ public class RentalsApp extends Application {
         textReturned.setStyle("-fx-font: normal bold 20px 'serif' ");
         gridPane.setStyle("-fx-background-color: BEIGE;");
 
-        // step 11: make all interactive elements the same width for a clean look
         comboBoxCustomer.setPrefWidth(200);
         comboBoxGenre.setPrefWidth(200);
         comboBoxMovies.setPrefWidth(200);
@@ -86,10 +64,99 @@ public class RentalsApp extends Application {
         buttonSaveRental.setPrefWidth(200);
         buttonReturnMovie.setPrefWidth(200);
 
-        // step 12: create the main scene containing the layout
-        Scene scene = new Scene(gridPane);
+        try {
+            Connection conn = DBConnection.getConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT Fullname FROM Clients WHERE isactive = 1");
+            while (rs.next()) {
+                comboBoxCustomer.getItems().add(rs.getString("Fullname"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
-        // step 13: configure the application window (stage) and make it visible
+        try {
+            Connection conn = DBConnection.getConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT genre FROM Genres WHERE isactive = 1");
+            while (rs.next()) {
+                comboBoxGenre.getItems().add(rs.getString("genre"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        comboBoxGenre.setOnAction(e -> {
+            comboBoxMovies.getItems().clear();
+            String selectedGenre = comboBoxGenre.getValue();
+            try {
+                Connection conn = DBConnection.getConnection();
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery("SELECT Title FROM Movies WHERE isactive = 1 AND genre_id = (SELECT id FROM Genres WHERE genre = '" + selectedGenre + "')");
+                while (rs.next()) {
+                    comboBoxMovies.getItems().add(rs.getString("Title"));
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        try {
+            Connection conn = DBConnection.getConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT Clients.Fullname, Movies.Title FROM Rentals JOIN Clients ON Rentals.client_id = Clients.id JOIN Movies ON Rentals.movie_id = Movies.id WHERE Rentals.Returned = 0");
+            while (rs.next()) {
+                comboBoxBorrowed.getItems().add(rs.getString("Fullname") + " - " + rs.getString("Title"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        buttonSaveRental.setOnAction(e -> {
+            String customer = comboBoxCustomer.getValue();
+            String movie = comboBoxMovies.getValue();
+            try {
+                Connection conn = DBConnection.getConnection();
+                Statement stmt = conn.createStatement();
+
+                ResultSet rs1 = stmt.executeQuery("SELECT id FROM Clients WHERE Fullname = '" + customer + "'");
+                rs1.next();
+                int clientId = rs1.getInt("id");
+
+                ResultSet rs2 = stmt.executeQuery("SELECT id FROM Movies WHERE Title = '" + movie + "'");
+                rs2.next();
+                int movieId = rs2.getInt("id");
+
+                PreparedStatement ps = conn.prepareStatement("INSERT INTO Rentals (client_id, movie_id, Returned) VALUES (?, ?, 0)");
+                ps.setInt(1, clientId);
+                ps.setInt(2, movieId);
+                ps.executeUpdate();
+
+                comboBoxBorrowed.getItems().add(customer + " - " + movie);
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        buttonReturnMovie.setOnAction(e -> {
+            String selected = comboBoxBorrowed.getValue();
+            if (selected != null) {
+                String[] parts = selected.split(" - ");
+                String clientName = parts[0];
+                String movieTitle = parts[1];
+                try {
+                    Connection conn = DBConnection.getConnection();
+                    Statement stmt = conn.createStatement();
+                    stmt.executeUpdate("UPDATE Rentals SET Returned = 1 WHERE client_id = (SELECT id FROM Clients WHERE Fullname = '" + clientName + "') AND movie_id = (SELECT id FROM Movies WHERE Title = '" + movieTitle + "') AND Returned = 0");
+                    comboBoxBorrowed.getItems().remove(selected);
+                    comboBoxReturned.getItems().add(selected);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+        Scene scene = new Scene(gridPane);
         stage.setTitle("Movie Library System - Rentals");
         stage.setScene(scene);
         stage.show();

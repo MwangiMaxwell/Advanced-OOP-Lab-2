@@ -6,10 +6,10 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import java.sql.*;
 
 public class VideoLibraryApp extends Application {
 
-    // Method to create the Genres layout panel
     private GridPane buildGenresPane() {
         Text text1 = new Text("Name:");
         Text text2 = new Text("Registered:");
@@ -35,7 +35,6 @@ public class VideoLibraryApp extends Application {
 
         button1.setStyle("-fx-background-color: darkslateblue; -fx-text-fill: white; -fx-font-size:13pt;");
         button2.setStyle("-fx-background-color: darkslateblue; -fx-text-fill: white; -fx-font-size:13pt;");
-
         text1.setStyle("-fx-font: normal bold 20px 'serif' ");
         text2.setStyle("-fx-font: normal bold 20px 'serif' ");
         gridPane.setStyle("-fx-background-color: BEIGE;");
@@ -45,10 +44,47 @@ public class VideoLibraryApp extends Application {
         button1.setPrefWidth(220);
         button2.setPrefWidth(220);
 
+        try {
+            Connection conn = DBConnection.getConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT genre FROM Genres WHERE isactive = 1");
+            while (rs.next()) {
+                comboBox.getItems().add(rs.getString("genre"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        button1.setOnAction(e -> {
+            String name = textField1.getText();
+            try {
+                Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement("INSERT INTO Genres (genre, isactive) VALUES (?, 1)");
+                ps.setString(1, name);
+                ps.executeUpdate();
+                comboBox.getItems().add(name);
+                textField1.clear();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        button2.setOnAction(e -> {
+            String selected = comboBox.getValue();
+            try {
+                Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement("UPDATE Genres SET isactive = 0 WHERE genre = ?");
+                ps.setString(1, selected);
+                ps.executeUpdate();
+                comboBox.getItems().remove(selected);
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        });
+
         return gridPane;
     }
 
-    // Method to create the Movies layout panel
     private GridPane buildMoviesPane() {
         Text textGenres = new Text("Genres:");
         Text textName = new Text("Name:");
@@ -78,7 +114,6 @@ public class VideoLibraryApp extends Application {
 
         buttonSave.setStyle("-fx-background-color: darkslateblue; -fx-text-fill: white; -fx-font-size:13pt;");
         buttonRemove.setStyle("-fx-background-color: darkslateblue; -fx-text-fill: white; -fx-font-size:13pt;");
-
         textGenres.setStyle("-fx-font: normal bold 20px 'serif' ");
         textName.setStyle("-fx-font: normal bold 20px 'serif' ");
         textRegistered.setStyle("-fx-font: normal bold 20px 'serif' ");
@@ -90,10 +125,65 @@ public class VideoLibraryApp extends Application {
         buttonSave.setPrefWidth(220);
         buttonRemove.setPrefWidth(220);
 
+        try {
+            Connection conn = DBConnection.getConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT genre FROM Genres WHERE isactive = 1");
+            while (rs.next()) {
+                comboBoxGenre.getItems().add(rs.getString("genre"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            Connection conn = DBConnection.getConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT Title FROM Movies WHERE isactive = 1");
+            while (rs.next()) {
+                comboBoxRegistered.getItems().add(rs.getString("Title"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        buttonSave.setOnAction(e -> {
+            String genre = comboBoxGenre.getValue();
+            String title = textFieldName.getText();
+            try {
+                Connection conn = DBConnection.getConnection();
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery("SELECT id FROM Genres WHERE genre = '" + genre + "'");
+                rs.next();
+                int genreId = rs.getInt("id");
+
+                PreparedStatement ps = conn.prepareStatement("INSERT INTO Movies (genre_id, Title, isactive) VALUES (?, ?, 1)");
+                ps.setInt(1, genreId);
+                ps.setString(2, title);
+                ps.executeUpdate();
+                comboBoxRegistered.getItems().add(title);
+                textFieldName.clear();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        buttonRemove.setOnAction(e -> {
+            String selected = comboBoxRegistered.getValue();
+            try {
+                Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement("UPDATE Movies SET isactive = 0 WHERE Title = ?");
+                ps.setString(1, selected);
+                ps.executeUpdate();
+                comboBoxRegistered.getItems().remove(selected);
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        });
+
         return gridPane;
     }
 
-    // Method to create the Customers layout panel
     private GridPane buildCustomersPane() {
         Text textName = new Text("Name:");
         Text textPhone = new Text("Phone:");
@@ -127,7 +217,6 @@ public class VideoLibraryApp extends Application {
 
         buttonSave.setStyle("-fx-background-color: darkslateblue; -fx-text-fill: white; -fx-font-size:13pt;");
         buttonRemove.setStyle("-fx-background-color: darkslateblue; -fx-text-fill: white; -fx-font-size:13pt;");
-
         textName.setStyle("-fx-font: normal bold 20px 'serif' ");
         textPhone.setStyle("-fx-font: normal bold 20px 'serif' ");
         textEmail.setStyle("-fx-font: normal bold 20px 'serif' ");
@@ -141,10 +230,49 @@ public class VideoLibraryApp extends Application {
         buttonSave.setPrefWidth(220);
         buttonRemove.setPrefWidth(220);
 
+        try {
+            Connection conn = DBConnection.getConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT Fullname FROM Clients WHERE isactive = 1");
+            while (rs.next()) {
+                comboBoxRegistered.getItems().add(rs.getString("Fullname"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        buttonSave.setOnAction(e -> {
+            String name = textFieldName.getText();
+            try {
+                Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement("INSERT INTO Clients (Fullname, isactive) VALUES (?, 1)");
+                ps.setString(1, name);
+                ps.executeUpdate();
+                comboBoxRegistered.getItems().add(name);
+                textFieldName.clear();
+                textFieldPhone.clear();
+                textFieldEmail.clear();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        buttonRemove.setOnAction(e -> {
+            String selected = comboBoxRegistered.getValue();
+            try {
+                Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement("UPDATE Clients SET isactive = 0 WHERE Fullname = ?");
+                ps.setString(1, selected);
+                ps.executeUpdate();
+                comboBoxRegistered.getItems().remove(selected);
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        });
+
         return gridPane;
     }
 
-    // Method to create the Rentals layout panel
     private GridPane buildRentalsPane() {
         Text textCustomer = new Text("Customer:");
         Text textGenre = new Text("Genre:");
@@ -182,7 +310,6 @@ public class VideoLibraryApp extends Application {
 
         buttonSaveRental.setStyle("-fx-background-color: darkslateblue; -fx-text-fill: white; -fx-font-size:13pt;");
         buttonReturnMovie.setStyle("-fx-background-color: darkslateblue; -fx-text-fill: white; -fx-font-size:13pt;");
-
         textCustomer.setStyle("-fx-font: normal bold 20px 'serif' ");
         textGenre.setStyle("-fx-font: normal bold 20px 'serif' ");
         textMovies.setStyle("-fx-font: normal bold 20px 'serif' ");
@@ -198,41 +325,123 @@ public class VideoLibraryApp extends Application {
         buttonSaveRental.setPrefWidth(220);
         buttonReturnMovie.setPrefWidth(220);
 
+        try {
+            Connection conn = DBConnection.getConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT Fullname FROM Clients WHERE isactive = 1");
+            while (rs.next()) {
+                comboBoxCustomer.getItems().add(rs.getString("Fullname"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            Connection conn = DBConnection.getConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT genre FROM Genres WHERE isactive = 1");
+            while (rs.next()) {
+                comboBoxGenre.getItems().add(rs.getString("genre"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        comboBoxGenre.setOnAction(e -> {
+            comboBoxMovies.getItems().clear();
+            String selectedGenre = comboBoxGenre.getValue();
+            try {
+                Connection conn = DBConnection.getConnection();
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery("SELECT Title FROM Movies WHERE isactive = 1 AND genre_id = (SELECT id FROM Genres WHERE genre = '" + selectedGenre + "')");
+                while (rs.next()) {
+                    comboBoxMovies.getItems().add(rs.getString("Title"));
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        try {
+            Connection conn = DBConnection.getConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT Clients.Fullname, Movies.Title FROM Rentals JOIN Clients ON Rentals.client_id = Clients.id JOIN Movies ON Rentals.movie_id = Movies.id WHERE Rentals.Returned = 0");
+            while (rs.next()) {
+                comboBoxBorrowed.getItems().add(rs.getString("Fullname") + " - " + rs.getString("Title"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        buttonSaveRental.setOnAction(e -> {
+            String customer = comboBoxCustomer.getValue();
+            String movie = comboBoxMovies.getValue();
+            try {
+                Connection conn = DBConnection.getConnection();
+                Statement stmt = conn.createStatement();
+
+                ResultSet rs1 = stmt.executeQuery("SELECT id FROM Clients WHERE Fullname = '" + customer + "'");
+                rs1.next();
+                int clientId = rs1.getInt("id");
+
+                ResultSet rs2 = stmt.executeQuery("SELECT id FROM Movies WHERE Title = '" + movie + "'");
+                rs2.next();
+                int movieId = rs2.getInt("id");
+
+                PreparedStatement ps = conn.prepareStatement("INSERT INTO Rentals (client_id, movie_id, Returned) VALUES (?, ?, 0)");
+                ps.setInt(1, clientId);
+                ps.setInt(2, movieId);
+                ps.executeUpdate();
+
+                comboBoxBorrowed.getItems().add(customer + " - " + movie);
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        buttonReturnMovie.setOnAction(e -> {
+            String selected = comboBoxBorrowed.getValue();
+            if (selected != null) {
+                String[] parts = selected.split(" - ");
+                String clientName = parts[0];
+                String movieTitle = parts[1];
+                try {
+                    Connection conn = DBConnection.getConnection();
+                    Statement stmt = conn.createStatement();
+                    stmt.executeUpdate("UPDATE Rentals SET Returned = 1 WHERE client_id = (SELECT id FROM Clients WHERE Fullname = '" + clientName + "') AND movie_id = (SELECT id FROM Movies WHERE Title = '" + movieTitle + "') AND Returned = 0");
+                    comboBoxBorrowed.getItems().remove(selected);
+                    comboBoxReturned.getItems().add(selected);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+
         return gridPane;
     }
 
     @Override
     public void start(Stage stage) {
 
-        // create a TabPane to hold multiple screens in one window
         TabPane tabPane = new TabPane();
 
-        // create a Tab for Genres and assign the layout we built above
         Tab tabGenres = new Tab("Genres", buildGenresPane());
-        tabGenres.setClosable(false); // prevent the user from closing the tab
+        tabGenres.setClosable(false);
 
-        // create a Tab for Movies
         Tab tabMovies = new Tab("Movies", buildMoviesPane());
         tabMovies.setClosable(false);
 
-        // create a Tab for Customers
         Tab tabCustomers = new Tab("Customers", buildCustomersPane());
         tabCustomers.setClosable(false);
 
-        // create a Tab for Rentals
         Tab tabRentals = new Tab("Rentals", buildRentalsPane());
         tabRentals.setClosable(false);
 
-        // add all tabs to the TabPane
         tabPane.getTabs().addAll(tabGenres, tabMovies, tabCustomers, tabRentals);
-
-        // set the font for the tabs
         tabPane.setStyle("-fx-font-size: 13pt; -fx-font-family: 'Serif';");
 
-        // create the main scene with the TabPane as the root
         Scene scene = new Scene(tabPane);
 
-        // setup the main window
         stage.setTitle("Movie Library System");
         stage.setScene(scene);
         stage.show();
